@@ -33,12 +33,12 @@ def process_grib_to_df(grib_file_path: str) -> pd.DataFrame:
   return df.dropna()
 
 def process_nc_to_df(nc_file_path: str) -> pd.DataFrame:
-  nc_file = nc.Dataset(nc_file_path)
-  df = pd.DataFrame(nc_file)
+  # nc_file = nc.Dataset(nc_file_path)
+  nc_file = xr.open_dataset(nc_file_path)
+  df = nc_file.to_dataframe().reset_index()
 
   # Change specific column names
   df = df.rename(columns={
-      'time': 'Predicted_at_time',
       'valid_time': 'Date',
       "t2m": 'Temperature',
       'latitude': 'Latitude',
@@ -46,7 +46,6 @@ def process_nc_to_df(nc_file_path: str) -> pd.DataFrame:
   })
 
   df['Temperature'] = k2c(df['Temperature'])
-  df['Predicted_at_time'] = df['Predicted_at_time'].dt.date
   df['Date'] = df['Date'].dt.date
 
   return df
@@ -54,3 +53,7 @@ def process_nc_to_df(nc_file_path: str) -> pd.DataFrame:
 def k2c(k):
   c = k - 273.15
   return c
+
+
+if __name__ == '__main__':
+    process_nc_to_df("../Data/era5-2021-jan.nc")
